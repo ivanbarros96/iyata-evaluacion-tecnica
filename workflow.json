@@ -1,0 +1,441 @@
+{
+  "name": "🔄 Renovación Token MercadoLibre",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "timestamp-field",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "access-token-field",
+              "name": "access_token",
+              "value": "={{ $json.access_token }}",
+              "type": "string"
+            },
+            {
+              "id": "refresh-token-field",
+              "name": "refresh_token",
+              "value": "={{ $json.refresh_token }}",
+              "type": "string"
+            },
+            {
+              "id": "expires-field",
+              "name": "expires_in",
+              "value": "={{ $json.expires_in }}",
+              "type": "number"
+            },
+            {
+              "id": "user-id-field",
+              "name": "user_id",
+              "value": "={{ $json.user_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [368, 16],
+      "id": "bfb43a38-d79a-4afe-b438-edf047e5f39d",
+      "name": "📝 Prepara datos"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [-80, 164],
+      "id": "1bb8d7aa-39a3-47ac-9f66-3807fbeb727a",
+      "name": "✂️ Extrae Último Registro"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mercadolibre.com/oauth/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            },
+            {
+              "name": "client_id",
+              "value": "TU_CLIENT_ID_AQUI"
+            },
+            {
+              "name": "client_secret",
+              "value": "TU_CLIENT_SECRET_AQUI"
+            },
+            {
+              "name": "refresh_token",
+              "value": "={{ $json.refresh_token }}"
+            },
+            {
+              "name": "redirect_uri",
+              "value": "TU_REDIRECT_URI_AQUI"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [144, 164],
+      "id": "5be4cafc-17ec-4fb3-85c2-86dfdf0f84f4",
+      "name": "🔄 Refresh OAuth ML",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [-752, 68],
+      "id": "f4bc68ae-eb1f-464e-951a-5e3c0a5ee34d",
+      "name": "⏰ Ejecutar Cada 6h"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/TU_ID_DE_SHEET_AQUI",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [-528, 164],
+      "id": "1cd1649f-744f-487e-9f42-65ee81fbb519",
+      "name": "📖 Leer Token Actual"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "timestamp",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [-304, 164],
+      "id": "08c7baa0-86d8-4729-a45d-932652a786eb",
+      "name": "🔽 Ordenar por Fecha"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/TU_ID_DE_SHEET_AQUI",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $json.user_id }}",
+            "expires_in": "={{ $json.expires_in }}",
+            "refresh_token": "={{ $json.refresh_token }}",
+            "access_token": "={{ $json.access_token }}",
+            "timestamp": "={{ $json.timestamp }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "access_token",
+              "displayName": "access_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "refresh_token",
+              "displayName": "refresh_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expires_in",
+              "displayName": "expires_in",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [656, 16],
+      "id": "30e765ea-62bd-4739-99c4-d650dc4784ab",
+      "name": "💾 Guardar Token Nuevo"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [576, 544],
+      "id": "9d6727a0-e236-436d-9b25-35ea92a1130e",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"mensaje\": \"El parámetro grant_type es requerido pero no fue enviado\",\n  \"causa\": \"Typo: se envió 'grant_typ' en lugar de 'grant_type'\",\n  \"solucion\": \"Cambiar 'grant_typ' por 'grant_type' en el nodo Refresh OAuth ML\",\n  \"severidad\": \"Crítico\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [752, 544],
+      "id": "d6357797-ad42-4eec-b585-34e00bfedfe5",
+      "name": "Salida estructurada"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2d7baa73-12b9-49e5-b2a8-2e3d54aa399c",
+              "name": "Fecha_hora",
+              "value": "={{ new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }) }}",
+              "type": "string"
+            },
+            {
+              "id": "8ec24587-27a8-491d-8d12-e445177e5a72",
+              "name": "Mensaje_error",
+              "value": "={{ $json.error.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [368, 312],
+      "id": "91f465cd-9e84-42e3-a16d-be185b24e23a",
+      "name": "📋 Extraer Metadatos"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.Mensaje_error}}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Eres un SRE experto en:\n- APIs OAuth 2.0 (RFC 6749)\n- Integración con Mercado Libre API\n- Debugging de n8n workflows\n- Análisis de errores HTTP\n- Tu respuesta debe ser:\n✓ Técnicamente precisa\n✓ Accionable (pasos concretos)\n✓ En español \n✓ Estructurada en JSON\n✓ Cuando detectes errores de configuración, menciona el nombre del nodo n8n exacto donde corregir."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [592, 312],
+      "id": "443d247b-c16e-4a8e-89a4-a1048ad31934",
+      "name": "🌐 Traducir al Español"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09PN219465",
+          "mode": "list",
+          "cachedResultName": "auditoria-agentes-ia"
+        },
+        "text": "=🚨 `ERROR DETECTADO PARA AUDITAR`\n\n\n*Fecha y Hora:* {{ $('📋 Extraer Metadatos').item.json.Fecha_hora }}\n*Mensaje:* {{ $json.output.mensaje}}\n*Causa:* {{ $json.output.causa}}\n*Solucion:* \n{{ $json.output.solucion}}\n\n",
+        "otherOptions": {
+          "includeLinkToWorkflow": false,
+          "link_names": true,
+          "mrkdwn": true
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [944, 312],
+      "id": "667a024c-cab7-4321-bb77-24a5d0cae47d",
+      "name": "📢 Notificar a Slack"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "📝 Prepara datos": {
+      "main": [
+        [
+          {
+            "node": "💾 Guardar Token Nuevo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✂️ Extrae Último Registro": {
+      "main": [
+        [
+          {
+            "node": "🔄 Refresh OAuth ML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔄 Refresh OAuth ML": {
+      "main": [
+        [
+          {
+            "node": "📝 Prepara datos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "📋 Extraer Metadatos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⏰ Ejecutar Cada 6h": {
+      "main": [
+        [
+          {
+            "node": "📖 Leer Token Actual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📖 Leer Token Actual": {
+      "main": [
+        [
+          {
+            "node": "🔽 Ordenar por Fecha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔽 Ordenar por Fecha": {
+      "main": [
+        [
+          {
+            "node": "✂️ Extrae Último Registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "🌐 Traducir al Español",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salida estructurada": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "🌐 Traducir al Español",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📋 Extraer Metadatos": {
+      "main": [
+        [
+          {
+            "node": "🌐 Traducir al Español",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 Traducir al Español": {
+      "main": [
+        [
+          {
+            "node": "📢 Notificar a Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
