@@ -4,34 +4,42 @@ Este repositorio contiene la solución a la evaluación técnica para el rol de 
 
 ## Parte A: Workflow de n8n - Renovación de Tokens MercadoLibre
 
-### Objetivo de la Automatización
-El objetivo de este flujo es mantener activa la conexión con la API de MercadoLibre mediante la renovación automática del `Access Token`. Dado que estos tokens expiran cada 6 horas, el flujo garantiza la continuidad operativa sin intervención manual.
+### 🎯 Objetivo de la Automatización
+**El Problema:** La API de MercadoLibre utiliza tokens de acceso (`access_token`) que caducan cada 6 horas. Si no se renuevan a tiempo, las integraciones de venta y stock dejan de funcionar, causando pérdidas operativas.
 
-**Funcionalidades Clave:**
-1.  **Lectura y Escritura en Google Sheets:** Obtiene el último token válido y almacena el nuevo tras la renovación.
-2.  **Integración API (MercadoLibre):** Realiza la petición POST al endpoint OAuth oficial.
-3.  **Agente de IA (Manejo de Errores):** En caso de fallo en la API, un agente de LangChain (OpenAI GPT-4 Mini) analiza el código de error crudo, lo traduce a un lenguaje técnico explicativo y genera una solución accionable.
-4.  **Notificaciones:** Alerta inmediata vía Slack con el diagnóstico de la IA.
+**La Solución:** Este workflow automatiza el ciclo de vida de la autenticación mediante:
+1.  **Renovación Proactiva:** Un trigger programado renueva el token antes de que expire.
+2.  **Persistencia de Datos:** Lee el último `refresh_token` válido desde Google Sheets y guarda el nuevo generado.
+3.  **Resiliencia con IA:** Integra un agente de **OpenAI (GPT-4 Mini)** que, en caso de fallo en la API, analiza el código de error técnico y envía un diagnóstico claro y accionable en español a Slack.
 
 ### 🎥 Video Demo
-Puedes ver la explicación del funcionamiento y la ejecución en vivo aquí:
+Explicación detallada del flujo y pruebas:
 [Ver Video Tutorial en YouTube](https://youtu.be/F92ydQJyZY0)
 
-### Configuración de Credenciales
-Para ejecutar este workflow en un entorno local o nube, se requieren configurar las siguientes credenciales en n8n:
+### 🔐 Configuración de Credenciales
+Para desplegar este proyecto, se deben configurar las siguientes credenciales en el gestor de credenciales de n8n:
 
-1.  **Google Sheets:** Credencial OAuth2 o Service Account con permisos de edición sobre la hoja de destino.
-2.  **MercadoLibre API:**
-    * En el nodo *Refresh OAuth ML*, se deben ingresar el `Client ID` y `Client Secret` de tu aplicación de MercadoLibre.
-    * `Redirect URI`: Debe coincidir con la configurada en tu App de ML.
-3.  **OpenAI:** API Key válida para el uso del modelo `gpt-4.1-mini`.
-4.  **Slack:** Credencial OAuth para enviar mensajes al canal de auditoría.
+1.  **Google Sheets (OAuth2):**
+    * Requiere una cuenta de Google Cloud Console con la API de Sheets habilitada.
+    * Scopes necesarios: `drive.file` o `spreadsheets`.
+2.  **MercadoLibre (HTTP Request):**
+    * En el nodo *Refresh OAuth ML*, se deben ingresar manualmente:
+        * `Client ID` (App ID de MercadoLibre).
+        * `Client Secret` (Secret Key).
+        * `Redirect URI` (Debe coincidir con la configuración de tu App).
+3.  **OpenAI (API Key):**
+    * Configurar una credencial tipo "OpenAI API" con una Key válida que tenga acceso al modelo `gpt-4.1-mini` (o superior).
+4.  **Slack (OAuth2):**
+    * Configurar la conexión con un Workspace y seleccionar el canal destino (en este caso, `#auditoria-agentes-ia`).
 
-### Cómo ejecutar y probar el workflow
-1.  Importar el archivo `workflow.json` en n8n.
-2.  Crear una hoja de Google Sheets con las columnas: `timestamp`, `access_token`, `refresh_token`, `expires_in`, `user_id`.
-3.  Configurar las credenciales en los nodos correspondientes.
-4.  Ejecutar manualmente el nodo inicial o esperar al Trigger programado (cada 6 horas).
+### 🚀 Cómo ejecutar y probar el workflow
+1.  **Importación:** Descarga el archivo `workflow.json` de este repositorio e impórtalo en n8n (Menú "Import from File").
+2.  **Preparación de Datos:** Crea una hoja de Google Sheets vacía con los encabezados: `timestamp`, `access_token`, `refresh_token`, `expires_in`, `user_id`. Agrega una primera fila con datos semilla (o datos ficticios) para la primera lectura.
+3.  **Conexión:** Asigna tus credenciales configuradas a los nodos correspondientes (Sheets, OpenAI, Slack).
+4.  **Prueba Manual:**
+    * Haz clic en el botón **"Test Workflow"** (o ejecuta manualmente el nodo *Trigger*).
+    * Verifica que se cree una nueva fila en Google Sheets con el token actualizado.
+5.  **Prueba de Error (Opcional):** Para probar el agente de IA, altera intencionalmente el `Client Secret` en el nodo HTTP y ejecuta de nuevo. Deberías recibir una alerta explicativa en Slack.
 
 ---
 
@@ -46,4 +54,4 @@ La solución de análisis, limpieza de datos y dashboard de control de calidad s
 ---
 
 ### Autor
-Entregado para el proceso de selección de Iyata - 2025.
+Entregado por **Ivan Barros** para el proceso de selección de Iyata - 2025.
